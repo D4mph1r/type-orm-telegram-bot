@@ -3,34 +3,35 @@ process.env.NTBA_FIX_319 = "1";
 
 import * as TelegramBot from "node-telegram-bot-api";
 import { AppDataSource } from "./data-source";
+import { DataSource } from "typeorm";
 import { WalletAddress } from "./entity/wallet-addresses";
 import AddToWhiteList from "./whitelisting/add-to-whitelist";
 import RemoveFromWhiteList from "./whitelisting/remove-from-whitelist";
 
-function startbot(connection) {
+function startbot(connection: DataSource) {
     const MyTelegramBot = new TelegramBot(config.TOKEN as string, { polling: true });
 
 
     MyTelegramBot.onText(/\/start/, async (msg, match) => {
 
         const chatId = msg.from?.id!;
-        console.log(msg.from.id, 'userid')
+       
         const userid = msg.from.id;
-        console.log(msg.text.replace('/start', '').trim(), 'address');
+        
         const address = msg.text.replace('/start', '').trim();
         if (address !== '' && address !== undefined && address !== null) {
             //AppDataSource.initialize().then(async () => {
 
-                const user = new WalletAddress();
-                user.UserId = userid.toString();
-                user.WalletAddress = address;
-                user.isGroupJoined = false;
-                await connection.manager.save(user);
+            const user = new WalletAddress();
+            user.UserId = userid.toString();
+            user.WalletAddress = address;
+            user.isGroupJoined = false;
+            await connection.manager.save(user);
 
-                const users = await connection.manager.find(WalletAddress);
-                console.log("Loaded users: ", users);
+            const users = await connection.manager.find(WalletAddress);
+            console.log("Loaded users: ", users);
 
-                MyTelegramBot.sendMessage(chatId, "Added in the whitelist successfully, click on the <a href='https://t.me/+uDVeuueNO3s4NjZk'>link</a> to join our group, thank you.", { parse_mode: 'HTML' });
+            MyTelegramBot.sendMessage(chatId, "Added in the whitelist successfully, click on the <a href='https://t.me/+uDVeuueNO3s4NjZk'>link</a> to join our group, thank you.", { parse_mode: 'HTML' });
 
             //    AppDataSource.destroy();
             // }).catch((error) => {
@@ -69,26 +70,26 @@ function startbot(connection) {
         //AppDataSource.initialize().then(async (connection) => {
 
 
-            const UserId = e.new_chat_members[0].id.toString();
+        const UserId = e.new_chat_members[0].id.toString();
 
-            let WalletRepository = connection.getRepository(WalletAddress);
+        let WalletRepository = connection.getRepository(WalletAddress);
 
-            let WalletToUpdate = await WalletRepository.findOne({
-                where:
-                    { UserId: UserId }
-            });
-            WalletToUpdate.isGroupJoined = true;
+        let WalletToUpdate = await WalletRepository.findOne({
+            where:
+                { UserId: UserId }
+        });
+        WalletToUpdate.isGroupJoined = true;
 
-            await WalletRepository.save(WalletToUpdate);
-            let data = {
-                address: WalletToUpdate.WalletAddress,
-                telegramUid: WalletToUpdate.UserId,
-                projectId: config.PROJECTID
-            }
+        await WalletRepository.save(WalletToUpdate);
+        let data = {
+            address: WalletToUpdate.WalletAddress,
+            telegramUid: WalletToUpdate.UserId,
+            projectId: config.PROJECTID
+        }
 
-            AddToWhiteList(data);
+        AddToWhiteList(data);
 
-            MyTelegramBot.sendMessage(chatId, "Added successfully in group.");
+        MyTelegramBot.sendMessage(chatId, "Added successfully in group.");
 
         //     AppDataSource.destroy();
         // }).catch((error) => {
@@ -103,21 +104,21 @@ function startbot(connection) {
         //AppDataSource.initialize().then(async (connection) => {
 
 
-            const UserId = e.left_chat_member.id.toString();
-            const isGroupJoined = true;
+        const UserId = e.left_chat_member.id.toString();
+        const isGroupJoined = true;
 
-            let WalletRepository = connection.getRepository(WalletAddress);
+        let WalletRepository = connection.getRepository(WalletAddress);
 
-            let WalletToUpdate = await WalletRepository.findOne({
-                where:
-                    { UserId: UserId }
-            });
+        let WalletToUpdate = await WalletRepository.findOne({
+            where:
+                { UserId: UserId }
+        });
 
-            await WalletRepository.remove(WalletToUpdate);
+        await WalletRepository.remove(WalletToUpdate);
 
 
 
-            RemoveFromWhiteList(UserId);
+        RemoveFromWhiteList(UserId);
 
         //    AppDataSource.destroy();
         // }).catch((error) => {
